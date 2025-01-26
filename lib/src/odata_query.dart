@@ -240,12 +240,22 @@ class Filter {
   static Filter all(String collection, String variable, Filter condition) =>
       Filter._('$collection/all($variable:${condition._expression})');
 
+  static Filter eqList(String field, List<dynamic> values) =>
+      Filter._(_encodeEqList(field, values));
+
   /// Helper method to encode values like strings or numbers.
   static String _encode(dynamic value) {
     if (value is String) {
       return "'${value.replaceAll("'", "''")}'";
     }
     return value.toString();
+  }
+
+  static String _encodeEqList(
+    String field,
+    List<dynamic> values,
+  ) {
+    return values.map((e) => '$field eq ${_encode(e)}').join(' or ');
   }
 
   /// Converts the filter to a string for query usage.
