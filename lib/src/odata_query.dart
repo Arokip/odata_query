@@ -1,3 +1,5 @@
+import 'package:odata_query/src/utils/filter_operators_enum.dart';
+
 /// ODataQuery helps build OData query strings by combining various parameters
 /// like $filter, $orderby, $select, and more in a declarative way.
 ///
@@ -240,12 +242,113 @@ class Filter {
   static Filter all(String collection, String variable, Filter condition) =>
       Filter._('$collection/all($variable:${condition._expression})');
 
+  /// Creates an 'or' filter with multiple 'eq' filters
+  ///
+  /// Example:
+  /// ```dart
+  /// Filter.orEqList('Name', ['Khaled', 'Ahmad'])
+  /// Produces: "Name eq 'Khaled' or Name eq 'Ahmad'"
+  /// ```
+  static Filter orEqList(String field, List<dynamic> values) => Filter._(
+        _encodeEqList(
+          field,
+          values,
+          FilterOperators.or,
+        ),
+      );
+
+  /// Creates an 'and' filter with multiple 'eq' filters
+  ///
+  /// Example:
+  /// ```dart
+  /// Filter.andEqList('Name', ['Khaled', 'Ahmad'])
+  /// Produces: "Name eq 'Khaled' and Name eq 'Ahmad'"
+  /// ```
+  static Filter andEqList(String field, List<dynamic> values) =>
+      Filter._(_encodeEqList(field, values, FilterOperators.and));
+
+  /// Creates an 'and' filter with multiple 'eq' conditions for different fields
+  ///
+  /// Example:
+  /// ```dart
+  /// Filter.andEqListDiffFields({'Name': 'Khaled', 'Age': 30})
+  /// Produces: "Name eq 'Khaled' and Age eq 30"
+  /// ```
+  static Filter andEqListDiffFields(
+    Map<String, dynamic> values,
+  ) =>
+      Filter._(_encodeEqListWDiffFields(values, FilterOperators.and));
+
+  /// Creates an 'or' filter with multiple 'eq' conditions for different fields
+  ///
+  /// Example:
+  /// ```dart
+  /// Filter.orEqListDiffFields({'Name': 'Khaled', 'Age': 30})
+  /// Produces: "Name eq 'Khaled' or Age eq 30"
+  /// ```
+  static Filter orEqListDiffFields(
+    Map<String, dynamic> values,
+  ) =>
+      Filter._(_encodeEqListWDiffFields(values, FilterOperators.or));
+
+  /// Creates a 'contains' filter for a specific field and value
+  ///
+  /// Example:
+  /// ```dart
+  /// Filter.contains('Name', 'Khaled')
+  /// Produces: "contains(Name, 'Khaled')"
+  /// ```
+  static Filter contains(
+    String field,
+    String value,
+  ) =>
+      Filter._('contains($field,${_encode(value)})');
+
+  /// Combines multiple filters using the specified operator ('and' or 'or')
+  ///
+  /// Example:
+  /// ```dart
+  /// Filter.multiFilters([
+  ///   Filter.contains('Name', 'Khaled'),
+  ///   Filter.orEqList('Age', [25, 30])
+  /// ], FilterOperators.and)
+  /// Produces: "contains(Name, 'Khaled') and Age eq 25 or Age eq 30"
+  /// ```
+  static Filter multiFilters(
+    List<Filter> filters,
+    FilterOperators operator,
+  ) =>
+      Filter._(
+        filters.map((e) => e.toString()).join(' ${operator.name} '),
+      );
+
   /// Helper method to encode values like strings or numbers.
   static String _encode(dynamic value) {
     if (value is String) {
       return "'${value.replaceAll("'", "''")}'";
     }
     return value.toString();
+  }
+
+  /// Helper method to encode list values.
+  static String _encodeEqList(
+    String field,
+    List<dynamic> values,
+    FilterOperators operator,
+  ) {
+    return values
+        .map((e) => '$field eq ${_encode(e)}')
+        .join(' ${operator.name} ');
+  }
+
+  /// Helper method to encode map values.
+  static String _encodeEqListWDiffFields(
+    Map<String, dynamic> map,
+    FilterOperators operator,
+  ) {
+    return map.entries
+        .map((entry) => '${entry.key} eq ${_encode(entry.value)}')
+        .join(' ${operator.name} ');
   }
 
   /// Converts the filter to a string for query usage.

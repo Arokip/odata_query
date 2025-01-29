@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:odata_query/src/odata_query.dart';
+import 'package:odata_query/src/utils/filter_operators_enum.dart';
 
 void main() {
   group('ODataQuery', () {
@@ -224,6 +225,45 @@ void main() {
           Filter.all('Products', 'item', Filter.eq('item/Type', 'Active'))
               .toString();
       expect(filter, "Products/all(item:item/Type eq 'Active')");
+    });
+
+    test('should create an orEqList filter', () {
+      final filter = Filter.orEqList('Name', ['Khaled', 'Ahmad']).toString();
+      expect(filter, "Name eq 'Khaled' or Name eq 'Ahmad'");
+    });
+
+    test('should create an andEqList filter', () {
+      final filter = Filter.andEqList('Name', ['Khaled', 'Ahmad']).toString();
+      expect(filter, "Name eq 'Khaled' and Name eq 'Ahmad'");
+    });
+
+    test('should create an andEqListDiffFields filter', () {
+      final filter =
+          Filter.andEqListDiffFields({'Name': 'Khaled', 'Age': 30}).toString();
+      expect(filter, "Name eq 'Khaled' and Age eq 30");
+    });
+
+    test('should create an orEqListDiffFields filter', () {
+      final filter =
+          Filter.orEqListDiffFields({'Name': 'Khaled', 'Age': 30}).toString();
+      expect(filter, "Name eq 'Khaled' or Age eq 30");
+    });
+
+    test('should create a contains filter', () {
+      final filter = Filter.contains('Name', 'Khaled').toString();
+      expect(filter, "contains(Name,'Khaled')");
+    });
+
+    test('should combine multiple filters using and', () {
+      final filter = Filter.multiFilters(
+        [
+          Filter.contains('Name', 'Khaled'),
+          Filter.orEqList('Age', [25, 30]),
+        ],
+        FilterOperators.and,
+      ).toString();
+
+      expect(filter, "contains(Name,'Khaled') and Age eq 25 or Age eq 30");
     });
   });
 
