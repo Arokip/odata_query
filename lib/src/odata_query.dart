@@ -197,6 +197,17 @@ class Filter {
   static Filter or(Filter left, Filter right) =>
       Filter._('${left._expression} or ${right._expression}');
 
+  static Filter not(Filter filter) => Filter._('not ${filter._expression}');
+
+  static Filter contains(String field, String value) =>
+      Filter._('contains($field,${_encode(value)})');
+
+  static Filter startsWith(String field, String value) =>
+      Filter._('startswith($field,${_encode(value)})');
+
+  static Filter endsWith(String field, String value) =>
+      Filter._('endswith($field,${_encode(value)})');
+
   /// Creates an `in` filter for matching a field against a list of values.
   ///
   /// Example:

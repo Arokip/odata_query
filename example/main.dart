@@ -73,17 +73,17 @@ void main() {
   final queryInCollection = ODataQuery(
     filter: Filter.inCollection('Name', 'RelevantProductNames'),
     select: ['Name', 'Price'],
-  ).toEncodedString();
+  ).toString();
 
   print('Query 5 (inCollection): $queryInCollection');
   // Result:
-  // "$filter=Name%20in%20RelevantProductNames&$select=Name%2CPrice"
+  // "$filter=Name in RelevantProductNames&$select=Name,Price"
 
   // Example 6: Using any to filter products with a collection property.
   // This filters items where there is at least one product that have the value 'Active' for the 'Type' property.
   final queryAny = ODataQuery(
     filter: Filter.any('Products', 'item', Filter.eq('item/Type', 'Active')),
-  ).toEncodedString();
+  ).toString();
 
   print('Query 6 (any): $queryAny');
   // Result:
@@ -93,9 +93,27 @@ void main() {
   // This filters items where all products that have the value 'Active' for the 'Type' property.
   final queryAll = ODataQuery(
     filter: Filter.all('Products', 'item', Filter.eq('item/Type', 'Active')),
-  ).toEncodedString();
+  ).toString();
 
   print('Query 7 (all): $queryAll');
   // Result:
   // "$filter=Products/all(item:item/Type eq 'Active')"
+
+  // Example 8: Filtering products where the 'Name' does NOT contain 'Sugar',
+  // does start with 'Choco', and does end with 'Bar'.
+  final searchQuery = ODataQuery(
+    filter: Filter.or(
+      Filter.and(
+        Filter.startsWith('Name', 'Choco'),
+        Filter.endsWith('Name', 'Bar'),
+      ),
+      Filter.not(
+        Filter.contains('Name', 'Sugar'),
+      ),
+    ),
+  ).toString();
+
+  print('Query 8 (search): $searchQuery');
+  // Expected Result:
+  // "$filter=startswith(Name,'Choco') and endswith(Name,'Bar') or not contains(Name,'Sugar')"
 }

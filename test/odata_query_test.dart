@@ -174,6 +174,22 @@ void main() {
       expect(filter, "Name eq 'O''Reilly'");
     });
 
+    test('should create a not filter', () {
+      final filter = Filter.not(Filter.eq('Name', 'Milk')).toString();
+      expect(filter, "not Name eq 'Milk'");
+    });
+
+    test('should create a not filter with complex condition', () {
+      final filter = Filter.not(
+        Filter.and(
+          Filter.eq('Name', 'Milk'),
+          Filter.lt('Price', 2.55),
+        ),
+      ).toString();
+
+      expect(filter, "not Name eq 'Milk' and Price lt 2.55");
+    });
+
     test('should handle null value in eq filter', () {
       final filter = Filter.eq('Name', null).toString();
       expect(filter, 'Name eq null');
@@ -224,6 +240,21 @@ void main() {
           Filter.all('Products', 'item', Filter.eq('item/Type', 'Active'))
               .toString();
       expect(filter, "Products/all(item:item/Type eq 'Active')");
+    });
+
+    test('should create a contains filter', () {
+      final filter = Filter.contains('Name', 'Milk').toString();
+      expect(filter, "contains(Name,'Milk')");
+    });
+
+    test('should create a startsWith filter', () {
+      final filter = Filter.startsWith('Name', 'Mil').toString();
+      expect(filter, "startswith(Name,'Mil')");
+    });
+
+    test('should create an endsWith filter', () {
+      final filter = Filter.endsWith('Name', 'lk').toString();
+      expect(filter, "endswith(Name,'lk')");
     });
   });
 

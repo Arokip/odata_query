@@ -1,3 +1,10 @@
+## 2.4.0
+
+* Added `contains` filter.
+* Added `startsWith` and `endsWith` filters.
+* Added negation `not`.
+* Updated readme and example.
+  
 ## 2.3.0
 
 * Added `any` and `all` filters.
