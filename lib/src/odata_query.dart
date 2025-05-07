@@ -272,6 +272,11 @@ class Filter {
 /// final orderBy = OrderBy.desc('Price');
 /// print(orderBy.toString());
 /// Output: "Price desc"
+///
+/// // Multiple fields using chaining
+/// final orderBy = OrderBy.desc('Date').thenAsc('Name');
+/// print(orderBy.toString());
+/// Output: "Date desc, Name asc"
 /// ```
 class OrderBy {
   OrderBy._(this._expression);
@@ -283,6 +288,12 @@ class OrderBy {
 
   /// Sorts results by a field in descending order (e.g., "Price desc").
   static OrderBy desc(String field) => OrderBy._('$field desc');
+
+  /// Adds an ascending sort by the specified field.
+  OrderBy thenAsc(String field) => OrderBy._('$_expression, $field asc');
+
+  /// Adds a descending sort by the specified field.
+  OrderBy thenDesc(String field) => OrderBy._('$_expression, $field desc');
 
   /// Converts the order-by clause to a string for query usage.
   @override

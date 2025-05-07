@@ -8,10 +8,11 @@
 
 ## 🚀 Features
 
-✔ **Build OData Queries**: Supports `$filter`, `$orderby`, `$select`, `$expand`, `$top`, `$skip`, and `$count`.  
-✔ **Programmatic Filter Construction**: Build OData filters with logical operators like `eq`, `lt`, `gt`, `and`, `or`, `not`, etc.  
-✔ **URL Encoding**: Automatically encodes query parameters for safe use in URLs with `toEncodedString()`.  
-✔ **Map Conversion**: Convert query parameters into a `Map<String, String>` format for flexible API integration.  
+✅ **Build OData Queries**: Supports `$filter`, `$orderby`, `$select`, `$expand`, `$top`, `$skip`, and `$count`.  
+✅ **Programmatic Filter Construction**: Build OData filters with logical operators like `eq`, `lt`, `gt`, `and`, `or`, `not`, etc.  
+✅ **URL Encoding**: Automatically encodes query parameters for safe use in URLs with `toEncodedString()`.  
+✅ **Map Conversion**: Convert query parameters into a `Map<String, String>` format for flexible API integration.  
+✅ **Chained OrderBy**: Chain multiple sort orders with a fluent API.  
 
 📚 **For detailed OData query options, see:**  
 [OData Query Options Overview](https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview)
@@ -131,6 +132,19 @@ ODataQuery(
     ),
   ),
 )
+```
+
+---
+
+### **🔹 Example 9: Chained OrderBy for Multiple Sort Fields**
+```dart
+ODataQuery(
+  filter: Filter.eq('Category', 'Beverages'),
+  orderBy: OrderBy.desc('Date').thenAsc('Name').thenDesc('Price'),
+  select: ['Name', 'Price', 'Date'],
+).toString();
+
+// $filter=Category eq 'Beverages'&$orderby=Date desc, Name asc, Price desc&$select=Name,Price,Date
 ```
 
 ---

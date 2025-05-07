@@ -116,4 +116,15 @@ void main() {
   print('Query 8 (search): $searchQuery');
   // Expected Result:
   // "$filter=startswith(Name,'Choco') and endswith(Name,'Bar') or not contains(Name,'Sugar')"
+
+  // Example 9: Using chained OrderBy to sort by multiple fields
+  final queryChainedOrderBy = ODataQuery(
+    filter: Filter.eq('Category', 'Beverages'),
+    orderBy: OrderBy.desc('Date').thenAsc('Name').thenDesc('Price'),
+    select: ['Name', 'Price', 'Date'],
+  ).toString();
+
+  print('Query 9 (chained OrderBy): $queryChainedOrderBy');
+  // Result:
+  // "$filter=Category eq 'Beverages'&$orderby=Date desc, Name asc, Price desc&$select=Name,Price,Date"
 }

@@ -1,3 +1,7 @@
+## 2.5.0
+
+* Added OrderBy chaining: `thenAsc` and `thenDesc`. 
+  
 ## 2.4.0
 
 * Added `contains` filter.

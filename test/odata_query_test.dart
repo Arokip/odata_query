@@ -268,5 +268,40 @@ void main() {
       final orderBy = OrderBy.desc('Price').toString();
       expect(orderBy, 'Price desc');
     });
+
+    test('should chain asc after desc', () {
+      final orderBy = OrderBy.desc('Date').thenAsc('Name').toString();
+      expect(orderBy, 'Date desc, Name asc');
+    });
+
+    test('should chain desc after asc', () {
+      final orderBy = OrderBy.asc('Name').thenDesc('Price').toString();
+      expect(orderBy, 'Name asc, Price desc');
+    });
+
+    test('should chain multiple order by clauses', () {
+      final orderBy =
+          OrderBy.desc('Date').thenAsc('Name').thenDesc('Price').toString();
+      expect(orderBy, 'Date desc, Name asc, Price desc');
+    });
+
+    test('should work with ODataQuery', () {
+      final query = ODataQuery(
+        orderBy: OrderBy.desc('Date').thenAsc('Name').thenDesc('Price'),
+      ).toString();
+      expect(query, '\$orderby=Date desc, Name asc, Price desc');
+    });
+
+    test('should work with other query parameters', () {
+      final query = ODataQuery(
+        filter: Filter.eq('Category', 'Beverages'),
+        orderBy: OrderBy.desc('Date').thenAsc('Name'),
+        select: ['Name', 'Price', 'Date'],
+      ).toString();
+      expect(
+        query,
+        '\$filter=Category eq \'Beverages\'&\$orderby=Date desc, Name asc&\$select=Name,Price,Date',
+      );
+    });
   });
 }
