@@ -24,10 +24,10 @@ void main() {
     test('should handle all query parameters', () {
       final query = ODataQuery(
         search: 'Milk',
-        filter: Filter.and(
+        filter: Filter.and([
           Filter.eq('Name', 'Milk'),
           Filter.lt('Price', 2.55),
-        ),
+        ]),
         orderBy: OrderBy.desc('Price'),
         select: ['Name', 'Price'],
         expand: ['Category'],
@@ -61,13 +61,13 @@ void main() {
 
     test('should handle complex filters with both AND and OR', () {
       final query = ODataQuery(
-        filter: Filter.and(
-          Filter.or(
+        filter: Filter.and([
+          Filter.or([
             Filter.eq('Category', 'Beverages'),
             Filter.eq('Category', 'Snacks'),
-          ),
+          ]),
           Filter.gt('Price', 5),
-        ),
+        ]),
       ).toEncodedString();
 
       expect(
@@ -152,21 +152,59 @@ void main() {
     });
 
     test('should combine filters using and', () {
-      final filter = Filter.and(
+      final filter = Filter.and([
         Filter.eq('Name', 'Milk'),
         Filter.lt('Price', 2.55),
-      ).toString();
+      ]).toString();
 
       expect(filter, "Name eq 'Milk' and Price lt 2.55");
     });
 
+    test('should handle multiple conditions in and filter', () {
+      final filter = Filter.and([
+        Filter.eq('Name', 'Milk'),
+        Filter.lt('Price', 2.55),
+        Filter.gt('Quantity', 10),
+        Filter.eq('Category', 'Dairy'),
+      ]).toString();
+
+      expect(
+        filter,
+        "Name eq 'Milk' and Price lt 2.55 and Quantity gt 10 and Category eq 'Dairy'",
+      );
+    });
+
+    test('should handle empty and filter', () {
+      final filter = Filter.and([]).toString();
+      expect(filter, '');
+    });
+
     test('should combine filters using or', () {
-      final filter = Filter.or(
+      final filter = Filter.or([
         Filter.eq('Name', 'Milk'),
         Filter.gt('Price', 1.5),
-      ).toString();
+      ]).toString();
 
       expect(filter, "Name eq 'Milk' or Price gt 1.5");
+    });
+
+    test('should handle multiple conditions in or filter', () {
+      final filter = Filter.or([
+        Filter.eq('Name', 'Milk'),
+        Filter.eq('Name', 'Cheese'),
+        Filter.eq('Name', 'Yogurt'),
+        Filter.eq('Name', 'Butter'),
+      ]).toString();
+
+      expect(
+        filter,
+        "Name eq 'Milk' or Name eq 'Cheese' or Name eq 'Yogurt' or Name eq 'Butter'",
+      );
+    });
+
+    test('should handle empty or filter', () {
+      final filter = Filter.or([]).toString();
+      expect(filter, '');
     });
 
     test('should handle special characters in strings', () {
@@ -181,10 +219,10 @@ void main() {
 
     test('should create a not filter with complex condition', () {
       final filter = Filter.not(
-        Filter.and(
+        Filter.and([
           Filter.eq('Name', 'Milk'),
           Filter.lt('Price', 2.55),
-        ),
+        ]),
       ).toString();
 
       expect(filter, "not Name eq 'Milk' and Price lt 2.55");

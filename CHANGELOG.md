@@ -1,3 +1,7 @@
+## 2.6.0
+
+* Filters `Filter.and` and `Filter.or` now accepts lists for more flexible queries. If the list is empty, the filter is omitted.
+  
 ## 2.5.0
 
 * Added OrderBy chaining: `thenAsc` and `thenDesc`. 

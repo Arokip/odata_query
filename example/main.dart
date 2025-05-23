@@ -5,10 +5,12 @@ void main() {
   // Then order by 'Price' in descending order, select 'Name' and 'Price', expand the 'Category',
   // retrieve the top 10 items, and include the total count of records.
   final queryString = ODataQuery(
-    filter: Filter.and(
+    filter: Filter.and([
       Filter.eq('Name', 'Milk'),
       Filter.lt('Price', 2.55),
-    ),
+      Filter.eq('Category', 'Dairy'),
+      if (0 != 1) Filter.eq('ShouldShowHidden', true),
+    ]),
     orderBy: OrderBy.desc('Price'),
     select: ['Name', 'Price'],
     expand: ['Category'], // Expanding related entities
@@ -18,7 +20,7 @@ void main() {
 
   print('Query 1 (toEncodedString): $queryString');
   // Result:
-  // "$filter=Name%20eq%20'Milk'%20and%20Price%20lt%202.55&$orderby=Price%20desc&$select=Name%2CPrice&$expand=Category&$top=10&$count=true"
+  // "$filter=Name%20eq%20'Milk'%20and%20Price%20lt%202.55%20and%20Category%20eq%20'Dairy'%20and%20ShouldShowHidden%20eq%20true&$orderby=Price%20desc&$select=Name%2CPrice&$expand=Category&$top=10&$count=true"
 
   // Example 2: Build a query to search for products in the 'Bakery' category,
   // return the top 5 results, skip the first 10 items, and order by 'Name' in ascending order.
@@ -102,15 +104,15 @@ void main() {
   // Example 8: Filtering products where the 'Name' does NOT contain 'Sugar',
   // does start with 'Choco', and does end with 'Bar'.
   final searchQuery = ODataQuery(
-    filter: Filter.or(
-      Filter.and(
+    filter: Filter.or([
+      Filter.and([
         Filter.startsWith('Name', 'Choco'),
         Filter.endsWith('Name', 'Bar'),
-      ),
+      ]),
       Filter.not(
         Filter.contains('Name', 'Sugar'),
       ),
-    ),
+    ]),
   ).toString();
 
   print('Query 8 (search): $searchQuery');

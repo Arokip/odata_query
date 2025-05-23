@@ -23,14 +23,16 @@
 
 ### **🔹 Example 1: Basic Filtering, Sorting, Selecting, Expanding, using `.toEncodedString()`**
 ```dart
-final queryString = ODataQuery(
-  filter: Filter.and(
+ODataQuery(
+  filter: Filter.and([
     Filter.eq('Name', 'Milk'),
     Filter.lt('Price', 2.55),
-  ),
+    Filter.eq('Category', 'Dairy'),
+    if (0 != 1) Filter.eq('ShouldShowHidden', true),
+  ]),
   orderBy: OrderBy.desc('Price'),
   select: ['Name', 'Price'],
-  expand: ['Category'],
+  expand: ['Category'], // Expanding related entities
   top: 10,
   count: true,
 ).toEncodedString();
@@ -43,13 +45,13 @@ final queryString = ODataQuery(
 ### **🔹 Example 2: Filtering with Logical Operators, using `.toMap()`**
 ```dart
 ODataQuery(
-  filter: Filter.and(
-    Filter.or(
+  filter: Filter.and([
+    Filter.or([
       Filter.eq('Category', 'Beverages'),
       Filter.eq('Category', 'Snacks'),
-    ),
+    ]),
     Filter.gt('Price', 5),
-  ),
+  ]),
   select: ['Name', 'Price', 'Category'],
   expand: ['Supplier', 'Category'],
 ).toMap();
@@ -83,7 +85,7 @@ ODataQuery(
 
 ### **🔹 Example 4: Using `inList` for Multiple Values**
 ```dart
-final queryInList = ODataQuery(
+ODataQuery(
   filter: Filter.inList('Name', ['Milk', 'Cheese', 'Donut']),
   select: ['Name', 'Price'],
 )
@@ -122,15 +124,15 @@ ODataQuery(
 ### **🔹 Example 8: Using `startsWith`, `endsWith`, `contains`, and `not`**
 ```dart
 ODataQuery(
-  filter: Filter.or(
-    Filter.and(
+  filter: Filter.or([
+    Filter.and([
       Filter.startsWith('Name', 'Choco'),
       Filter.endsWith('Name', 'Bar'),
-    ),
+    ]),
     Filter.not(
       Filter.contains('Name', 'Sugar'),
     ),
-  ),
+  ]),
 )
 ```
 
@@ -178,6 +180,12 @@ ODataQuery(
 | `contains`     | Check if a value contains a substring (`contains(Name, 'Choco')`)      |
 | `startsWith`   | Check if a value starts with a substring (`startswith(Name, 'Choco')`) |
 | `endsWith`     | Check if a value ends with a substring (`endswith(Name, 'Bar')`)       |
+
+---
+
+## ⭐ Support the Package
+
+If you find this package useful and want to help other developers discover it, please consider giving it a like on [pub.dev](https://pub.dev/packages/odata_query). Your support helps build trust in the package and makes it easier for other developers to find reliable solutions.
 
 ---
 

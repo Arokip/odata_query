@@ -83,7 +83,8 @@ class ODataQuery {
 
   Map<String, String> get _params => {
         if (search case final search?) r'$search': search,
-        if (filter case final filter?) r'$filter': filter.toString(),
+        if (filter case final filter? when filter.toString().isNotEmpty)
+          r'$filter': filter.toString(),
         if (orderBy case final orderBy?) r'$orderby': orderBy.toString(),
         if (select case final select? when select.isNotEmpty)
           r'$select': select.join(','),
@@ -189,13 +190,15 @@ class Filter {
   static Filter le(String field, dynamic value) =>
       Filter._('$field le ${_encode(value)}');
 
-  /// Combines two filters using a logical AND (e.g., "Name eq 'Milk' and Price lt 2.55").
-  static Filter and(Filter left, Filter right) =>
-      Filter._('${left._expression} and ${right._expression}');
+  /// Combines multiple filters using a logical AND (e.g., "Name eq 'Milk' and Price lt 2.55 and Category eq 'Dairy'").
+  /// Returns null if the list of filters is empty, which will cause the filter to be omitted from the query.
+  static Filter and(List<Filter> filters) =>
+      Filter._(filters.map((f) => f._expression).join(' and '));
 
-  /// Combines two filters using a logical OR (e.g., "Name eq 'Milk' or Price lt 2.55").
-  static Filter or(Filter left, Filter right) =>
-      Filter._('${left._expression} or ${right._expression}');
+  /// Combines multiple filters using a logical OR (e.g., "Name eq 'Milk' or Price lt 2.55 or Category eq 'Dairy'").
+  /// Returns null if the list of filters is empty, which will cause the filter to be omitted from the query.
+  static Filter or(List<Filter> filters) =>
+      Filter._(filters.map((f) => f._expression).join(' or '));
 
   static Filter not(Filter filter) => Filter._('not ${filter._expression}');
 
