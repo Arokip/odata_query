@@ -1,3 +1,9 @@
+## 2.7.0
+
+* Automatic parentheses for nested filter expressions. `Filter.and` and `Filter.or` now automatically add grouping parentheses around sub-expressions that contain logical operators (AND/OR) to ensure proper OData operator precedence and avoid logic errors.
+* This ensures compliance with OData specification requirements for logical operator precedence.
+* Complex nested filters now generate correct query strings that return expected results from OData services.
+
 ## 2.6.0
 
 * Filters `Filter.and` and `Filter.or` now accepts lists for more flexible queries. If the list is empty, the filter is omitted.
