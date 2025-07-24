@@ -129,4 +129,43 @@ void main() {
   print('Query 9 (chained OrderBy): $queryChainedOrderBy');
   // Result:
   // "$filter=Category eq 'Beverages'&$orderby=Date desc, Name asc, Price desc&$select=Name,Price,Date"
+
+  // Example 10: Complex nested filters with automatic parentheses
+  // This demonstrates how the package automatically adds parentheses around nested
+  // expressions to ensure proper OData operator precedence.
+  final queryNestedFilters = ODataQuery(
+    filter: Filter.and([
+      Filter.eq('ProductTypeId', 1),
+      Filter.or([
+        Filter.eq('CategoryId', 10),
+        Filter.eq('CategoryId', 33),
+      ]),
+      Filter.and([
+        Filter.eq('category', 'groceries'),
+        Filter.eq('category', 'ingredients'),
+      ]),
+    ]),
+  ).toString();
+
+  print('Query 10 (nested filters with parentheses): $queryNestedFilters');
+  // Result:
+  // "$filter=ProductTypeId eq 1 and (CategoryId eq 10 or CategoryId eq 33) and (category eq 'groceries' and category eq 'ingredients')"
+
+  // Example 11: Another complex filter showing OR with nested AND expressions
+  final queryComplexOr = ODataQuery(
+    filter: Filter.or([
+      Filter.eq('Category', 'Premium'),
+      Filter.and([
+        Filter.eq('Category', 'Standard'),
+        Filter.lt('Price', 50),
+        Filter.gt('Rating', 4),
+      ]),
+      Filter.eq('OnSale', true),
+    ]),
+    select: ['Name', 'Category', 'Price', 'Rating'],
+  ).toString();
+
+  print('Query 11 (OR with nested AND): $queryComplexOr');
+  // Result:
+  // "$filter=Category eq 'Premium' or (Category eq 'Standard' and Price lt 50 and Rating gt 4) or OnSale eq true&$select=Name,Category,Price,Rating"
 }

@@ -72,7 +72,47 @@ void main() {
 
       expect(
         query,
-        r"$filter=Category%20eq%20'Beverages'%20or%20Category%20eq%20'Snacks'%20and%20Price%20gt%205",
+        r"$filter=(Category%20eq%20'Beverages'%20or%20Category%20eq%20'Snacks')%20and%20Price%20gt%205",
+      );
+    });
+
+    test(
+        'should handle complex filters with both AND and OR - updated with parentheses',
+        () {
+      final query = ODataQuery(
+        filter: Filter.and([
+          Filter.or([
+            Filter.eq('Category', 'Beverages'),
+            Filter.eq('Category', 'Snacks'),
+          ]),
+          Filter.gt('Price', 5),
+        ]),
+      ).toString();
+
+      expect(
+        query,
+        r"$filter=(Category eq 'Beverages' or Category eq 'Snacks') and Price gt 5",
+      );
+    });
+
+    test('should match the exact user example with proper parentheses', () {
+      final query = ODataQuery(
+        filter: Filter.and([
+          Filter.eq('ProductTypeId', 1),
+          Filter.or([
+            Filter.eq('CategoryId', 10),
+            Filter.eq('CategoryId', 33),
+          ]),
+          Filter.and([
+            Filter.eq('category', 'groceries'),
+            Filter.eq('category', 'ingredients'),
+          ]),
+        ]),
+      ).toString();
+
+      expect(
+        query,
+        r"$filter=ProductTypeId eq 1 and (CategoryId eq 10 or CategoryId eq 33) and (category eq 'groceries' and category eq 'ingredients')",
       );
     });
 
@@ -293,6 +333,121 @@ void main() {
     test('should create an endsWith filter', () {
       final filter = Filter.endsWith('Name', 'lk').toString();
       expect(filter, "endswith(Name,'lk')");
+    });
+
+    test('should automatically add parentheses for nested OR within AND', () {
+      final filter = Filter.and([
+        Filter.eq('ProductTypeId', 1),
+        Filter.or([
+          Filter.eq('CategoryId', 10),
+          Filter.eq('CategoryId', 33),
+        ]),
+        Filter.and([
+          Filter.eq('category', 'groceries'),
+          Filter.eq('category', 'ingredients'),
+        ]),
+      ]).toString();
+
+      expect(
+        filter,
+        "ProductTypeId eq 1 and (CategoryId eq 10 or CategoryId eq 33) and (category eq 'groceries' and category eq 'ingredients')",
+      );
+    });
+
+    test('should automatically add parentheses for nested AND within OR', () {
+      final filter = Filter.or([
+        Filter.eq('Category', 'Dairy'),
+        Filter.and([
+          Filter.eq('Name', 'Cheese'),
+          Filter.lt('Price', 5),
+        ]),
+        Filter.eq('Category', 'Bakery'),
+      ]).toString();
+
+      expect(
+        filter,
+        "Category eq 'Dairy' or (Name eq 'Cheese' and Price lt 5) or Category eq 'Bakery'",
+      );
+    });
+
+    test('should handle complex nested filters with multiple levels', () {
+      final filter = Filter.and([
+        Filter.eq('Active', true),
+        Filter.or([
+          Filter.and([
+            Filter.eq('Category', 'Electronics'),
+            Filter.gt('Price', 100),
+          ]),
+          Filter.and([
+            Filter.eq('Category', 'Books'),
+            Filter.lt('Price', 50),
+          ]),
+        ]),
+      ]).toString();
+
+      expect(
+        filter,
+        "Active eq true and ((Category eq 'Electronics' and Price gt 100) or (Category eq 'Books' and Price lt 50))",
+      );
+    });
+
+    test('should not add unnecessary parentheses for simple filters', () {
+      final filter = Filter.and([
+        Filter.eq('Name', 'Milk'),
+        Filter.lt('Price', 2.55),
+        Filter.eq('Category', 'Dairy'),
+      ]).toString();
+
+      expect(
+        filter,
+        "Name eq 'Milk' and Price lt 2.55 and Category eq 'Dairy'",
+      );
+    });
+
+    test('should handle nested filters without conflicting operators', () {
+      final filter = Filter.or([
+        Filter.eq('Name', 'Milk'),
+        Filter.eq('Name', 'Cheese'),
+        Filter.eq('Name', 'Yogurt'),
+      ]).toString();
+
+      expect(
+        filter,
+        "Name eq 'Milk' or Name eq 'Cheese' or Name eq 'Yogurt'",
+      );
+    });
+
+    test('should handle mixed filters with NOT operator', () {
+      final filter = Filter.and([
+        Filter.eq('Category', 'Food'),
+        Filter.or([
+          Filter.not(Filter.eq('Name', 'Expired')),
+          Filter.gt('Rating', 4),
+        ]),
+      ]).toString();
+
+      expect(
+        filter,
+        "Category eq 'Food' and (not Name eq 'Expired' or Rating gt 4)",
+      );
+    });
+
+    test('should handle deeply nested expressions correctly', () {
+      final filter = Filter.or([
+        Filter.eq('Type', 'Premium'),
+        Filter.and([
+          Filter.eq('Type', 'Standard'),
+          Filter.or([
+            Filter.lt('Price', 10),
+            Filter.eq('OnSale', true),
+          ]),
+        ]),
+      ]).toString();
+
+      expect(
+        filter,
+        "Type eq 'Premium' or (Type eq 'Standard' and (Price lt 10 or OnSale eq true))",
+      );
     });
   });
 

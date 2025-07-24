@@ -57,10 +57,53 @@ ODataQuery(
 ).toMap();
 
 // {
-//   '$filter': "Category eq 'Beverages' or Category eq 'Snacks' and Price gt 5",
+//   '$filter': "(Category eq 'Beverages' or Category eq 'Snacks') and Price gt 5",
 //   '$select': 'Name,Price,Category',
 //   '$expand': 'Supplier,Category',
 // }
+```
+
+---
+
+### **🔹 Example 2.1: Automatic Parentheses for Complex Nested Filters**
+
+The package automatically adds parentheses around nested expressions to ensure proper OData operator precedence and avoid logic errors:
+
+```dart
+ODataQuery(
+  filter: Filter.and([
+    Filter.eq('ProductTypeId', 1),
+    Filter.or([
+      Filter.eq('CategoryId', 10),
+      Filter.eq('CategoryId', 33),
+    ]),
+    Filter.and([
+      Filter.eq('category', 'groceries'),
+      Filter.eq('category', 'ingredients'),
+    ]),
+  ]),
+).toString();
+
+// $filter=ProductTypeId eq 1 and (CategoryId eq 10 or CategoryId eq 33) and (category eq 'groceries' and category eq 'ingredients')
+```
+
+**Why this matters:** According to the OData specification, parentheses are required to override the default precedence of logical operators (AND binds tighter than OR). Without parentheses, filters with mixed AND/OR may not return expected results from an OData service.
+
+```dart
+// Complex OR with nested AND expressions
+ODataQuery(
+  filter: Filter.or([
+    Filter.eq('Category', 'Premium'),
+    Filter.and([
+      Filter.eq('Category', 'Standard'),
+      Filter.lt('Price', 50),
+      Filter.gt('Rating', 4),
+    ]),
+    Filter.eq('OnSale', true),
+  ]),
+);
+
+// $filter=Category eq 'Premium' or (Category eq 'Standard' and Price lt 50 and Rating gt 4) or OnSale eq true
 ```
 
 ---

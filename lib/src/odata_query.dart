@@ -192,13 +192,39 @@ class Filter {
 
   /// Combines multiple filters using a logical AND (e.g., "Name eq 'Milk' and Price lt 2.55 and Category eq 'Dairy'").
   /// Returns null if the list of filters is empty, which will cause the filter to be omitted from the query.
-  static Filter and(List<Filter> filters) =>
-      Filter._(filters.map((f) => f._expression).join(' and '));
+  ///
+  /// Automatically adds parentheses around sub-expressions that contain OR operators
+  /// to ensure proper precedence and avoid logic errors.
+  static Filter and(List<Filter> filters) {
+    final expressions = filters.map((f) {
+      // Add parentheses around expressions that contain logical operators
+      // to ensure proper precedence and explicit grouping
+      if (f._expression.contains(' or ') || f._expression.contains(' and ')) {
+        return '(${f._expression})';
+      }
+      return f._expression;
+    }).toList();
+
+    return Filter._(expressions.join(' and '));
+  }
 
   /// Combines multiple filters using a logical OR (e.g., "Name eq 'Milk' or Price lt 2.55 or Category eq 'Dairy'").
   /// Returns null if the list of filters is empty, which will cause the filter to be omitted from the query.
-  static Filter or(List<Filter> filters) =>
-      Filter._(filters.map((f) => f._expression).join(' or '));
+  ///
+  /// Automatically adds parentheses around sub-expressions that contain AND operators
+  /// to ensure proper precedence and avoid logic errors.
+  static Filter or(List<Filter> filters) {
+    final expressions = filters.map((f) {
+      // Add parentheses around expressions that contain logical operators
+      // to ensure proper precedence and explicit grouping
+      if (f._expression.contains(' and ') || f._expression.contains(' or ')) {
+        return '(${f._expression})';
+      }
+      return f._expression;
+    }).toList();
+
+    return Filter._(expressions.join(' or '));
+  }
 
   static Filter not(Filter filter) => Filter._('not ${filter._expression}');
 
