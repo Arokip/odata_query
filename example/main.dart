@@ -116,8 +116,8 @@ void main() {
   ).toString();
 
   print('Query 8 (search): $searchQuery');
-  // Expected Result:
-  // "$filter=startswith(Name,'Choco') and endswith(Name,'Bar') or not contains(Name,'Sugar')"
+  // Result:
+  // "$filter=(startswith(Name,'Choco') and endswith(Name,'Bar')) or not contains(Name,'Sugar')"
 
   // Example 9: Using chained OrderBy to sort by multiple fields
   final queryChainedOrderBy = ODataQuery(
@@ -168,4 +168,113 @@ void main() {
   print('Query 11 (OR with nested AND): $queryComplexOr');
   // Result:
   // "$filter=Category eq 'Premium' or (Category eq 'Standard' and Price lt 50 and Rating gt 4) or OnSale eq true&$select=Name,Category,Price,Rating"
+
+  // Example 12: Product filtering with deeply nested conditions
+  // This demonstrates automatic parentheses handling for complex business logic
+  final queryProductFiltering = ODataQuery(
+    filter: Filter.and([
+      Filter.eq('ProductTypeId', 1),
+      Filter.or([
+        Filter.eq('CategoryId', 10),
+        Filter.eq('CategoryId', 33),
+      ]),
+      Filter.or([
+        Filter.eq('Region', 'North'),
+        Filter.eq('Region', 'South'),
+      ]),
+    ]),
+  ).toString();
+
+  print('Query 12 (Product Filtering): $queryProductFiltering');
+  // Result:
+  // "$filter=ProductTypeId eq 1 and (CategoryId eq 10 or CategoryId eq 33) and (Region eq 'North' or Region eq 'South')"
+
+  // Example 13: Very complex multi-level nested query
+  // Shows how the package handles deeply nested AND/OR combinations automatically
+  final queryMultiLevel = ODataQuery(
+    filter: Filter.and([
+      Filter.or([
+        // First major branch
+        Filter.and([
+          Filter.eq('ProductType', 'Food'),
+          Filter.and([
+            Filter.or([
+              Filter.eq('SubCategory', 'Snacks'),
+              Filter.eq('SubCategory', 'Sweets'),
+            ]),
+            Filter.or([
+              Filter.eq('Origin', 'Local'),
+              Filter.eq('Origin', 'Imported'),
+            ]),
+          ]),
+        ]),
+        // Second major branch
+        Filter.and([
+          Filter.eq('ProductType', 'Beverage'),
+          Filter.and([
+            Filter.or([
+              Filter.eq('SubCategory', 'Coffee'),
+              Filter.eq('SubCategory', 'Tea'),
+            ]),
+            Filter.or([
+              Filter.and([
+                Filter.eq('Origin', 'Domestic'),
+                Filter.eq('Certified', true),
+              ]),
+              Filter.eq('Origin', 'International'),
+            ]),
+          ]),
+        ]),
+      ]),
+      // Common conditions
+      Filter.and([
+        Filter.or([
+          Filter.eq('Quality', 'Premium'),
+          Filter.eq('Quality', 'Standard'),
+        ]),
+        Filter.or([
+          Filter.eq('Status', 'Available'),
+          Filter.eq('Status', 'PreOrder'),
+        ]),
+      ]),
+    ]),
+  ).toString();
+
+  print('Query 13 (Multi-level nested): $queryMultiLevel');
+  // The package automatically adds all necessary parentheses to ensure
+  // correct OData evaluation according to the specification
+
+  // Example 14: Advanced product filtering with complex conditions
+  final queryAdvancedFiltering = ODataQuery(
+    filter: Filter.and([
+      Filter.eq('Active', true),
+      Filter.or([
+        // Beverages with specific price range and brands
+        Filter.and([
+          Filter.eq('Category', 'Beverages'),
+          Filter.ge('Price', 5),
+          Filter.le('Price', 50),
+          Filter.or([
+            Filter.eq('Brand', 'CoffeeCo'),
+            Filter.eq('Brand', 'TeaTime'),
+          ]),
+        ]),
+        // Dairy with type and stock conditions
+        Filter.and([
+          Filter.eq('Category', 'Dairy'),
+          Filter.or([
+            Filter.eq('Type', 'Organic'),
+            Filter.eq('Type', 'Premium'),
+          ]),
+          Filter.eq('InStock', true),
+        ]),
+      ]),
+    ]),
+    select: ['Name', 'Category', 'Price', 'Brand', 'InStock'],
+    orderBy: OrderBy.desc('Price').thenAsc('Name'),
+    top: 50,
+  ).toString();
+
+  print('Query 14 (Advanced Filtering): $queryAdvancedFiltering');
+  // Demonstrates how the package handles real-world business filtering scenarios
 }

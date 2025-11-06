@@ -4,14 +4,14 @@
 /// Example:
 /// ```dart
 /// final query = ODataQuery(
-///   filter: Filter.and(
+///   filter: Filter.and([
 ///     Filter.eq('Name', 'Milk'),
 ///     Filter.lt('Price', 2.55),
-///   ),
+///   ]),
 ///   orderBy: OrderBy.desc('Price'),
 ///   top: 10,
 ///   count: true,
-/// ).build();
+/// ).toEncodedString();
 ///
 /// print(query);
 /// Output: "$filter=Name%20eq%20%27Milk%27%20and%20Price%20lt%202.55&$orderby=Price%20desc&$top=10&$count=true"
@@ -102,7 +102,7 @@ class ODataQuery {
   /// final query = ODataQuery(
   ///   filter: Filter.eq('Name', 'Milk'),
   ///   orderBy: OrderBy.asc('Price'),
-  /// ).build();
+  /// ).toString();
   ///
   /// print(query);
   /// Output: "$filter=Name eq 'Milk'&$orderby=Price asc"
@@ -119,7 +119,7 @@ class ODataQuery {
   /// final query = ODataQuery(
   ///   filter: Filter.eq('Name', 'Milk'),
   ///   orderBy: OrderBy.asc('Price'),
-  /// ).build();
+  /// ).toEncodedString();
   ///
   /// print(query);
   /// Output: "$filter=Name%20eq%20%27Milk%27&$orderby=Price%20asc"
@@ -151,20 +151,27 @@ class ODataQuery {
 /// It provides methods to create filters like eq (equals), ne (not equals), gt (greater than),
 /// lt (less than), and allows combining filters using logical AND/OR.
 ///
+/// The package automatically handles parentheses for nested expressions to ensure
+/// proper OData operator precedence. This is crucial because OData follows specific
+/// rules where AND has higher precedence than OR, and parentheses are required
+/// to group expressions correctly.
+///
 /// Example:
 /// ```dart
-/// final filter = Filter.and(
+/// final filter = Filter.and([
 ///   Filter.eq('Name', 'Milk'),
 ///   Filter.lt('Price', 2.55),
-/// );
+/// ]);
 ///
 /// print(filter.toString());
 /// Output: "Name eq 'Milk' and Price lt 2.55"
 /// ```
 class Filter {
-  Filter._(this._expression);
+  Filter._(this._expression, {bool isCompound = false})
+      : _isCompound = isCompound;
 
   final String _expression;
+  final bool _isCompound;
 
   /// Creates an equality filter (e.g., "Name eq 'Milk'").
   static Filter eq(String field, dynamic value) =>
@@ -191,42 +198,63 @@ class Filter {
       Filter._('$field le ${_encode(value)}');
 
   /// Combines multiple filters using a logical AND (e.g., "Name eq 'Milk' and Price lt 2.55 and Category eq 'Dairy'").
-  /// Returns null if the list of filters is empty, which will cause the filter to be omitted from the query.
+  /// Returns an empty filter if the list of filters is empty.
   ///
-  /// Automatically adds parentheses around sub-expressions that contain OR operators
-  /// to ensure proper precedence and avoid logic errors.
+  /// Automatically adds parentheses around sub-expressions that contain logical operators
+  /// to ensure proper precedence and avoid logic errors. This is critical for correct
+  /// OData query evaluation, as the OData specification requires explicit grouping
+  /// when mixing AND and OR operators.
   static Filter and(List<Filter> filters) {
+    if (filters.isEmpty) {
+      return Filter._('', isCompound: false);
+    }
+
     final expressions = filters.map((f) {
-      // Add parentheses around expressions that contain logical operators
-      // to ensure proper precedence and explicit grouping
-      if (f._expression.contains(' or ') || f._expression.contains(' and ')) {
+      // Add parentheses around compound expressions (those containing logical operators)
+      // to ensure proper precedence and explicit grouping.
+      // Simple expressions don't need parentheses.
+      if (f._isCompound) {
         return '(${f._expression})';
       }
       return f._expression;
     }).toList();
 
-    return Filter._(expressions.join(' and '));
+    return Filter._(expressions.join(' and '), isCompound: true);
   }
 
   /// Combines multiple filters using a logical OR (e.g., "Name eq 'Milk' or Price lt 2.55 or Category eq 'Dairy'").
-  /// Returns null if the list of filters is empty, which will cause the filter to be omitted from the query.
+  /// Returns an empty filter if the list of filters is empty.
   ///
-  /// Automatically adds parentheses around sub-expressions that contain AND operators
-  /// to ensure proper precedence and avoid logic errors.
+  /// Automatically adds parentheses around sub-expressions that contain logical operators
+  /// to ensure proper precedence and avoid logic errors. This is critical for correct
+  /// OData query evaluation, as the OData specification requires explicit grouping
+  /// when mixing AND and OR operators.
   static Filter or(List<Filter> filters) {
+    if (filters.isEmpty) {
+      return Filter._('', isCompound: false);
+    }
+
     final expressions = filters.map((f) {
-      // Add parentheses around expressions that contain logical operators
-      // to ensure proper precedence and explicit grouping
-      if (f._expression.contains(' and ') || f._expression.contains(' or ')) {
+      // Add parentheses around compound expressions (those containing logical operators)
+      // to ensure proper precedence and explicit grouping.
+      // Simple expressions don't need parentheses.
+      if (f._isCompound) {
         return '(${f._expression})';
       }
       return f._expression;
     }).toList();
 
-    return Filter._(expressions.join(' or '));
+    return Filter._(expressions.join(' or '), isCompound: true);
   }
 
-  static Filter not(Filter filter) => Filter._('not ${filter._expression}');
+  /// Creates a NOT filter that negates the given condition.
+  /// Automatically wraps compound expressions in parentheses.
+  static Filter not(Filter filter) {
+    final expression = filter._isCompound
+        ? 'not (${filter._expression})'
+        : 'not ${filter._expression}';
+    return Filter._(expression, isCompound: false);
+  }
 
   static Filter contains(String field, String value) =>
       Filter._('contains($field,${_encode(value)})');

@@ -1,3 +1,9 @@
+## 2.8.0
+
+* **Enhanced automatic parentheses handling**: Improved algorithm for `Filter.and` and `Filter.or` to intelligently add parentheses only where needed for compound expressions.
+* **Improved NOT filter**: `Filter.not` now correctly wraps compound expressions in parentheses (e.g., `not (A and B)` instead of `not A and B`).
+
+
 ## 2.7.0
 
 * Automatic parentheses for nested filter expressions. `Filter.and` and `Filter.or` now automatically add grouping parentheses around sub-expressions that contain logical operators (AND/OR) to ensure proper OData operator precedence and avoid logic errors.

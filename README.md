@@ -37,7 +37,7 @@ ODataQuery(
   count: true,
 ).toEncodedString();
 
-// $filter=Name%20eq%20'Milk'%20and%20Price%20lt%202.55&$orderby=Price%20desc&$select=Name%2CPrice&$expand=Category&$top=10&$count=true
+// $filter=Name%20eq%20'Milk'%20and%20Price%20lt%202.55%20and%20Category%20eq%20'Dairy'%20and%20ShouldShowHidden%20eq%20true&$orderby=Price%20desc&$select=Name%2CPrice&$expand=Category&$top=10&$count=true
 ```
 
 ---
@@ -105,6 +105,74 @@ ODataQuery(
 
 // $filter=Category eq 'Premium' or (Category eq 'Standard' and Price lt 50 and Rating gt 4) or OnSale eq true
 ```
+
+---
+
+### **🔹 Example 2.2: Real-World Complex Nested Queries**
+
+The package handles arbitrarily deep nesting with automatic parenthesization:
+
+```dart
+// Product filtering with multiple conditions
+ODataQuery(
+  filter: Filter.and([
+    Filter.eq('ProductTypeId', 1),
+    Filter.or([
+      Filter.eq('CategoryId', 10),
+      Filter.eq('CategoryId', 33),
+    ]),
+    Filter.or([
+      Filter.eq('Region', 'North'),
+      Filter.eq('Region', 'South'),
+    ]),
+  ]),
+).toString();
+
+// Result:
+// $filter=ProductTypeId eq 1 and (CategoryId eq 10 or CategoryId eq 33) and (Region eq 'North' or Region eq 'South')
+```
+
+**Complex multi-level nesting:**
+
+```dart
+// Advanced product filtering
+ODataQuery(
+  filter: Filter.and([
+    Filter.eq('Active', true),
+    Filter.or([
+      // Beverages with specific conditions
+      Filter.and([
+        Filter.eq('Category', 'Beverages'),
+        Filter.ge('Price', 5),
+        Filter.le('Price', 50),
+        Filter.or([
+          Filter.eq('Brand', 'CoffeeCo'),
+          Filter.eq('Brand', 'TeaTime'),
+        ]),
+      ]),
+      // Dairy with different conditions
+      Filter.and([
+        Filter.eq('Category', 'Dairy'),
+        Filter.or([
+          Filter.eq('Type', 'Organic'),
+          Filter.eq('Type', 'Premium'),
+        ]),
+        Filter.eq('InStock', true),
+      ]),
+    ]),
+  ]),
+);
+
+// The package automatically generates properly parenthesized OData filter expressions
+// that correctly represent your business logic
+```
+
+**Key Benefits:**
+- ✅ No manual parentheses management needed
+- ✅ Guaranteed correct OData operator precedence
+- ✅ Clean, readable Dart code that matches your business logic
+- ✅ Prevents logic errors from incorrect grouping
+- ✅ Works with arbitrarily deep nesting levels
 
 ---
 

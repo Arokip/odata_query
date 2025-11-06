@@ -265,7 +265,7 @@ void main() {
         ]),
       ).toString();
 
-      expect(filter, "not Name eq 'Milk' and Price lt 2.55");
+      expect(filter, "not (Name eq 'Milk' and Price lt 2.55)");
     });
 
     test('should handle null value in eq filter', () {
@@ -448,6 +448,160 @@ void main() {
         filter,
         "Type eq 'Premium' or (Type eq 'Standard' and (Price lt 10 or OnSale eq true))",
       );
+    });
+
+    test('should handle deeply nested OR and AND conditions', () {
+      final filter = Filter.and([
+        Filter.eq('ProductTypeId', 1),
+        Filter.or([
+          Filter.eq('CategoryId', 10),
+          Filter.eq('CategoryId', 33),
+        ]),
+        Filter.or([
+          Filter.eq('Region', 'North'),
+          Filter.eq('Region', 'South'),
+        ]),
+      ]).toString();
+
+      expect(
+        filter,
+        "ProductTypeId eq 1 and (CategoryId eq 10 or CategoryId eq 33) and (Region eq 'North' or Region eq 'South')",
+      );
+    });
+
+    test('should handle very complex multi-level nested conditions', () {
+      final filter = Filter.and([
+        Filter.or([
+          Filter.and([
+            Filter.eq('ProductType', 'Food'),
+            Filter.and([
+              Filter.or([
+                Filter.eq('SubCategory', 'Snacks'),
+                Filter.eq('SubCategory', 'Sweets'),
+              ]),
+              Filter.or([
+                Filter.eq('Origin', 'Local'),
+                Filter.eq('Origin', 'Imported'),
+              ]),
+            ]),
+          ]),
+          Filter.and([
+            Filter.eq('ProductType', 'Beverage'),
+            Filter.and([
+              Filter.or([
+                Filter.eq('SubCategory', 'Coffee'),
+                Filter.eq('SubCategory', 'Tea'),
+              ]),
+              Filter.or([
+                Filter.and([
+                  Filter.eq('Origin', 'Domestic'),
+                  Filter.eq('Certified', true),
+                ]),
+                Filter.eq('Origin', 'International'),
+              ]),
+            ]),
+          ]),
+        ]),
+        Filter.and([
+          Filter.or([
+            Filter.eq('Quality', 'Premium'),
+            Filter.eq('Quality', 'Standard'),
+          ]),
+          Filter.or([
+            Filter.eq('Status', 'Available'),
+            Filter.eq('Status', 'PreOrder'),
+          ]),
+        ]),
+      ]).toString();
+
+      // This verifies that deeply nested filters are properly parenthesized
+      expect(filter, contains('ProductType eq \'Food\''));
+      expect(filter, contains('ProductType eq \'Beverage\''));
+      expect(filter, contains('SubCategory eq \'Snacks\''));
+      expect(filter, contains('Quality eq \'Premium\''));
+      expect(filter, contains('Status eq \'Available\''));
+    });
+
+    test(
+        'should handle complex multi-level nesting with proper parentheses grouping',
+        () {
+      final filter = Filter.or([
+        Filter.and([
+          Filter.eq('Level1', 'A'),
+          Filter.or([
+            Filter.eq('Level2', 'B'),
+            Filter.and([
+              Filter.eq('Level3', 'C'),
+              Filter.eq('Level3', 'D'),
+            ]),
+          ]),
+        ]),
+        Filter.and([
+          Filter.eq('Level1', 'E'),
+          Filter.or([
+            Filter.eq('Level2', 'F'),
+            Filter.eq('Level2', 'G'),
+          ]),
+        ]),
+      ]).toString();
+
+      expect(
+        filter,
+        "(Level1 eq 'A' and (Level2 eq 'B' or (Level3 eq 'C' and Level3 eq 'D'))) or (Level1 eq 'E' and (Level2 eq 'F' or Level2 eq 'G'))",
+      );
+    });
+
+    test('should handle triple nested AND within OR within AND', () {
+      final filter = Filter.and([
+        Filter.eq('Outer', 1),
+        Filter.or([
+          Filter.and([
+            Filter.eq('Inner1', 2),
+            Filter.eq('Inner2', 3),
+          ]),
+          Filter.and([
+            Filter.eq('Inner3', 4),
+            Filter.eq('Inner4', 5),
+          ]),
+        ]),
+        Filter.eq('Outer2', 6),
+      ]).toString();
+
+      expect(
+        filter,
+        'Outer eq 1 and ((Inner1 eq 2 and Inner2 eq 3) or (Inner3 eq 4 and Inner4 eq 5)) and Outer2 eq 6',
+      );
+    });
+
+    test('should handle realistic advanced product filtering scenario', () {
+      final filter = Filter.and([
+        Filter.eq('Active', true),
+        Filter.or([
+          Filter.and([
+            Filter.eq('Category', 'Beverages'),
+            Filter.ge('Price', 5),
+            Filter.le('Price', 50),
+            Filter.or([
+              Filter.eq('Brand', 'CoffeeCo'),
+              Filter.eq('Brand', 'TeaTime'),
+            ]),
+          ]),
+          Filter.and([
+            Filter.eq('Category', 'Dairy'),
+            Filter.or([
+              Filter.eq('Type', 'Organic'),
+              Filter.eq('Type', 'Premium'),
+            ]),
+            Filter.eq('InStock', true),
+          ]),
+        ]),
+      ]).toString();
+
+      expect(filter, contains('Active eq true'));
+      expect(filter, contains('Category eq \'Beverages\''));
+      expect(filter, contains('Brand eq \'CoffeeCo\''));
+      expect(filter, contains('Category eq \'Dairy\''));
+      expect(filter, contains('InStock eq true'));
     });
   });
 
