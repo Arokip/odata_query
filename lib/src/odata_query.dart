@@ -310,6 +310,9 @@ class Filter {
 
   /// Helper method to encode values like strings or numbers.
   static String _encode(dynamic value) {
+    if (value is RawValue) {
+      return value.value;
+    }
     if (value is String) {
       return "'${value.replaceAll("'", "''")}'";
     }
@@ -319,6 +322,31 @@ class Filter {
   /// Converts the filter to a string for query usage.
   @override
   String toString() => _expression;
+}
+
+/// RawValue is a wrapper class that allows passing unquoted string values
+/// to Filter operations. This is useful for GUIDs, identifiers, or other
+/// values that should not be wrapped in single quotes in OData queries.
+///
+/// Example:
+/// ```dart
+/// // Using RawValue for a GUID (unquoted)
+/// Filter.eq('divisionId', RawValue('60965e60-91a5-48cd-b86e-c50587292213'))
+/// // Produces: divisionId eq 60965e60-91a5-48cd-b86e-c50587292213
+///
+/// // Without RawValue (quoted string)
+/// Filter.eq('divisionId', '60965e60-91a5-48cd-b86e-c50587292213')
+/// // Produces: divisionId eq '60965e60-91a5-48cd-b86e-c50587292213'
+/// ```
+class RawValue {
+  /// Creates a RawValue instance with the specified value.
+  RawValue(this.value);
+
+  /// The raw string value that will be used without quotes in the OData query.
+  final String value;
+
+  @override
+  String toString() => value;
 }
 
 /// The OrderBy class is used to create OData $orderby expressions, allowing sorting

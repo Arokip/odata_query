@@ -469,6 +469,43 @@ void main() {
       );
     });
 
+    test('should handle RawValue for unquoted strings', () {
+      final filter = Filter.eq('divisionId', RawValue('60965e60-91a5-48cd-b86e-c50587292213'))
+          .toString();
+      expect(filter, 'divisionId eq 60965e60-91a5-48cd-b86e-c50587292213');
+    });
+
+    test('should handle RawValue with GUID in complex filters', () {
+      final filter = Filter.and([
+        Filter.eq('divisionId', RawValue('60965e60-91a5-48cd-b86e-c50587292213')),
+        Filter.eq('Name', 'Test'),
+      ]).toString();
+      expect(
+        filter,
+        "divisionId eq 60965e60-91a5-48cd-b86e-c50587292213 and Name eq 'Test'",
+      );
+    });
+
+    test('should handle RawValue with OData typed syntax', () {
+      final filter = Filter.eq('Id', RawValue("guid'60965e60-91a5-48cd-b86e-c50587292213'"))
+          .toString();
+      expect(filter, "Id eq guid'60965e60-91a5-48cd-b86e-c50587292213'");
+    });
+
+    test('should handle RawValue in comparison operators', () {
+      final filter = Filter.gt('Price', RawValue('100')).toString();
+      expect(filter, 'Price gt 100');
+    });
+
+    test('should handle RawValue in inList', () {
+      final filter = Filter.inList('Id', [
+        RawValue('guid1'),
+        RawValue('guid2'),
+        'regular-string',
+      ]).toString();
+      expect(filter, "Id in (guid1,guid2,'regular-string')");
+    });
+
     test('should handle very complex multi-level nested conditions', () {
       final filter = Filter.and([
         Filter.or([

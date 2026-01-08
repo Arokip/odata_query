@@ -1,3 +1,9 @@
+## 2.9.0
+
+* **Added `RawValue` class**: Allows passing unquoted string values to Filter operations. This is essential for GUIDs, identifiers, or other values that should not be wrapped in single quotes in OData queries.
+* **Use case**: Some OData backends (especially OData V3 or specific V4 configurations) expect GUIDs without quotes or with typed syntax like `guid'...'`. The `RawValue` class enables this functionality.
+* **Example**: `Filter.eq('divisionId', RawValue('60965e60-91a5-48cd-b86e-c50587292213'))` produces `divisionId eq 60965e60-91a5-48cd-b86e-c50587292213` (unquoted).
+
 ## 2.8.0
 
 * **Enhanced automatic parentheses handling**: Improved algorithm for `Filter.and` and `Filter.or` to intelligently add parentheses only where needed for compound expressions.

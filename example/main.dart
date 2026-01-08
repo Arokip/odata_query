@@ -277,4 +277,41 @@ void main() {
 
   print('Query 14 (Advanced Filtering): $queryAdvancedFiltering');
   // Demonstrates how the package handles real-world business filtering scenarios
+
+  // Example 15: Using RawValue for unquoted strings (e.g., GUIDs)
+  // Some OData backends expect GUIDs or identifiers without quotes.
+  // RawValue allows you to pass unquoted string values.
+  final queryWithRawValue = ODataQuery(
+    filter: Filter.eq(
+        'divisionId', RawValue('60965e60-91a5-48cd-b86e-c50587292213')),
+    select: ['Name', 'Price'],
+  ).toString();
+
+  print('Query 15 (RawValue for GUID): $queryWithRawValue');
+  // Result:
+  // "$filter=divisionId eq 60965e60-91a5-48cd-b86e-c50587292213&$select=Name,Price"
+
+  // Example 16: Using RawValue with OData typed syntax for GUIDs
+  // Some OData implementations require the guid'...' syntax
+  final queryWithTypedGuid = ODataQuery(
+    filter:
+        Filter.eq('Id', RawValue("guid'60965e60-91a5-48cd-b86e-c50587292213'")),
+  ).toString();
+
+  print('Query 16 (RawValue with typed GUID): $queryWithTypedGuid');
+  // Result:
+  // "$filter=Id eq guid'60965e60-91a5-48cd-b86e-c50587292213'"
+
+  // Example 17: Mixing RawValue with regular strings
+  final queryMixed = ODataQuery(
+    filter: Filter.and([
+      Filter.eq('divisionId', RawValue('60965e60-91a5-48cd-b86e-c50587292213')),
+      Filter.eq('Name', 'Test Product'),
+      Filter.gt('Price', RawValue('100')),
+    ]),
+  ).toString();
+
+  print('Query 17 (Mixed RawValue and regular values): $queryMixed');
+  // Result:
+  // "$filter=divisionId eq 60965e60-91a5-48cd-b86e-c50587292213 and Name eq 'Test Product' and Price gt 100"
 }

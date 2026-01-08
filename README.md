@@ -262,6 +262,50 @@ ODataQuery(
 
 ---
 
+### **🔹 Example 10: Using `RawValue` for Unquoted Strings (GUIDs, Identifiers)**
+
+Some OData backends expect GUIDs or identifiers without quotes. The `RawValue` class allows you to pass unquoted string values:
+
+```dart
+// Using RawValue for a GUID (unquoted)
+ODataQuery(
+  filter: Filter.eq('divisionId', RawValue('60965e60-91a5-48cd-b86e-c50587292213')),
+  select: ['Name', 'Price'],
+).toString();
+
+// $filter=divisionId eq 60965e60-91a5-48cd-b86e-c50587292213&$select=Name,Price
+```
+
+**With OData typed syntax:**
+```dart
+// Some OData implementations require the guid'...' syntax
+ODataQuery(
+  filter: Filter.eq('Id', RawValue("guid'60965e60-91a5-48cd-b86e-c50587292213'")),
+).toString();
+
+// $filter=Id eq guid'60965e60-91a5-48cd-b86e-c50587292213'
+```
+
+**Mixing RawValue with regular strings:**
+```dart
+ODataQuery(
+  filter: Filter.and([
+    Filter.eq('divisionId', RawValue('60965e60-91a5-48cd-b86e-c50587292213')),
+    Filter.eq('Name', 'Test Product'),
+    Filter.gt('Price', RawValue('100')),
+  ]),
+).toString();
+
+// $filter=divisionId eq 60965e60-91a5-48cd-b86e-c50587292213 and Name eq 'Test Product' and Price gt 100
+```
+
+**Why use RawValue?**
+- Some OData backends (especially OData V3 or specific V4 configurations) expect GUIDs without quotes
+- Allows you to use OData typed syntax like `guid'...'` or other custom formats
+- Useful for identifiers, numeric strings, or any value that should not be quoted
+
+---
+
 ## 📚 API Overview
 
 ### **ODataQuery Parameters**
@@ -291,6 +335,7 @@ ODataQuery(
 | `contains`     | Check if a value contains a substring (`contains(Name, 'Choco')`)      |
 | `startsWith`   | Check if a value starts with a substring (`startswith(Name, 'Choco')`) |
 | `endsWith`     | Check if a value ends with a substring (`endswith(Name, 'Bar')`)       |
+| `RawValue`     | Pass unquoted string values (useful for GUIDs, identifiers)             |
 
 ---
 
